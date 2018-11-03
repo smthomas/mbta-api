@@ -1,0 +1,14 @@
+name: mbta-api
+recipe: pantheon
+config:
+  framework: drupal8
+  site: mbta-api
+  id: 5d31bea0-692f-4514-8e01-7161f0b4070a
+  webroot: web
+  xdebug: true
+  drush: path:/app/vendor/bin/drush
+tooling:
+  drupal:
+    cmd:
+      - "/app/vendor/bin/drupal"
+      - "--root=/app/web"
