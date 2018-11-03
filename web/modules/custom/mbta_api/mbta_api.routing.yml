@@ -10,10 +10,10 @@ mbta_api.mbta_admin_form:
     _admin_route: TRUE
 
 
-mbta_api.route_controller_hello:
+mbta_api.route_controller_content:
   path: '/routes'
   defaults:
-    _controller: '\Drupal\mbta_api\Controller\RouteController::hello'
+    _controller: '\Drupal\mbta_api\Controller\RouteController::content'
     _title: 'content'
   requirements:
     _permission: 'access content'
