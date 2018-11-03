@@ -77,7 +77,7 @@ class SchedulesController extends ControllerBase {
     ];
 
     // Get all trips for this route and direction .
-    $trips = $this->mbtaClient->request('/trips', $params, 'name');
+    $trips = $this->mbtaClient->request('/trips', $params, 'id');
 
     // Get all stops for this route and direction.
     $stops = $this->mbtaClient->request('/stops', $params);
@@ -90,7 +90,7 @@ class SchedulesController extends ControllerBase {
 
     if ($stops && $trips && $schedules) {
       // Generate the data structure.
-      $this->generateScheduleData($trips, $stops);
+      $this->generateScheduleData($trips, $stops, $route);
 
       // Update data with the original schedule and any realtime predictions.
       $this->updateScheduleMatrix($schedules);
@@ -120,13 +120,24 @@ class SchedulesController extends ControllerBase {
   /**
    * Build multidimensional schedule matrix to use to display schedule data.
    */
-  private function generateScheduleData($trips, $stops) {
+  private function generateScheduleData($trips, $stops, $route) {
     $trips_array = [];
 
     // Build the list of trip names and trip ids.
     foreach ($trips as $trip) {
-      $this->tripNames[] = $trip['attributes']['name'];
-      $trips_array[$trip['id']] = '';
+      // Verify this trip is part of the correct route.
+      // This is needed because the API can return back Shuttle routes
+      // that are not actually part of the train routes.
+      if ($trip['relationships']['route']['data']['id'] == $route) {
+        if (empty($trip['attributes']['name'])) {
+          $this->tripNames[] = $trip['id'];
+        }
+        else {
+          $this->tripNames[] = $trip['attributes']['name'];
+        }
+
+        $trips_array[$trip['id']] = '';
+      }
     }
 
     // Loop through the available stops and build out matrix structure.
