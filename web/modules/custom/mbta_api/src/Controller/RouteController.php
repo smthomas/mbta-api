@@ -56,33 +56,35 @@ class RouteController extends ControllerBase {
       foreach ($routes as $route) {
         $attr = $route['attributes'];
 
-        // Create table row styles and link to route schedule.
-        $styles = [
-          'background-color: #' . $attr['color'],
-          'color: #' . $attr['text_color'],
-        ];
-        $link_url = Url::fromRoute('mbta_api.schedules_controller_content', [
-          'route' => $route['id'],
-        ]);
-
         // Create the table row for the route.
-        $route_rows[] = [
-          'style' => implode(';', $styles),
+        $params = [
+          'route' => $route['id'],
+        ];
+        $options = [
+          'attributes' => ['style' => 'color: #' . $attr['text_color']],
+        ];
+        $route_rows[$attr['description']][] = [
+          'style' => 'background-color: #' . $attr['color'],
           'data' => [
-            Link::fromTextAndUrl($attr['long_name'], $link_url),
-            $this->t($attr['description']),
+            Link::createFromRoute($attr['long_name'], 'mbta_api.schedules_controller_content', $params, $options),
           ],
+        ];
+
+      }
+
+      $render_array = [];
+      foreach ($route_rows as $group => $rows) {
+        $render_array[] = [
+          '#type' => 'markup',
+          '#markup' => '<h3>' . $group . '</h3>',
+        ];
+        $render_array[] = [
+          '#type' => 'table',
+          '#rows' => $rows,
         ];
       }
 
-      return [
-        '#type' => 'table',
-        '#header' => [
-          $this->t('Route'),
-          $this->t('Description'),
-        ],
-        '#rows' => $route_rows,
-      ];
+      return $render_array;
     }
 
     return [

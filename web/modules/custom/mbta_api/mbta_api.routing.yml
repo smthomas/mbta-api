@@ -19,9 +19,10 @@ mbta_api.route_controller_content:
     _permission: 'access content'
 
 mbta_api.schedules_controller_content:
-  path: 'route/{route}'
+  path: 'route/{route}/{direction}'
   defaults:
     _controller: '\Drupal\mbta_api\Controller\SchedulesController::content'
     _title: 'MBTA Route Schedules'
+    direction: 0
   requirements:
     _permission: 'access content'
