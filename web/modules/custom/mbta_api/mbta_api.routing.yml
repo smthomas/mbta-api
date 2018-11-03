@@ -1,4 +1,3 @@
-
 mbta_api.mbta_admin_form:
   path: '/admin/config/mbta_api/mbtaadmin'
   defaults:
@@ -9,7 +8,6 @@ mbta_api.mbta_admin_form:
   options:
     _admin_route: TRUE
 
-
 mbta_api.route_controller_content:
   path: '/routes'
   defaults:
@@ -19,7 +17,7 @@ mbta_api.route_controller_content:
     _permission: 'access content'
 
 mbta_api.schedules_controller_content:
-  path: 'route/{route}/{direction}'
+  path: 'routes/{route}/{direction}'
   defaults:
     _controller: '\Drupal\mbta_api\Controller\SchedulesController::content'
     _title: 'MBTA Route Schedules'

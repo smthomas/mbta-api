@@ -48,7 +48,10 @@ class RouteController extends ControllerBase {
    *   Returns render array with MBTA routes in a table format.
    */
   public function content() {
-    $routes = $this->mbtaClient->request('/routes');
+    $params = [
+      'type' => '0,1,2',
+    ];
+    $routes = $this->mbtaClient->request('/routes', $params);
 
     if ($routes) {
       $route_rows = [];

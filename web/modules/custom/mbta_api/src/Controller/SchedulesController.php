@@ -34,11 +34,19 @@ class SchedulesController extends ControllerBase {
   private $scheduleMatrix;
 
   /**
+   * Tracks all the available train stops in an array keyed by the id.
+   *
+   * @var array
+   */
+  private $allStops;
+
+  /**
    * Constructs a new SchedulesController object.
    */
   public function __construct(MBTAClient $mbtaClient) {
     $this->mbtaClient = $mbtaClient;
     $this->tripNames = [];
+    $this->allStops = [];
   }
 
   /**
@@ -74,15 +82,19 @@ class SchedulesController extends ControllerBase {
     // Get all stops for this route and direction.
     $stops = $this->mbtaClient->request('/stops', $params);
 
-    // Get all schedules and fill in the time on the schedule matrix.
+    // Get all schedules to fill in the time on the schedule matrix.
     $schedules = $this->mbtaClient->request('/schedules', $params);
 
-    // @todo Allow changing direction (with a link).
-    // @todo Utilize the predictions.
-    // @todo Output the table.
+    // Get all the predictions to update any scheduled items that have been delayed.
+    $predictions = $this->mbtaClient->request('/predictions', $params);
 
     if ($stops && $trips && $schedules) {
-      $this->generateScheduleData($trips, $stops, $schedules);
+      // Generate the data structure.
+      $this->generateScheduleData($trips, $stops);
+
+      // Update data with the original schedule and any realtime predictions.
+      $this->updateScheduleMatrix($schedules);
+      $this->updateScheduleMatrix($predictions);
 
       $rows = [];
       foreach ($this->scheduleMatrix as $stop_name => $stop_row) {
@@ -95,7 +107,7 @@ class SchedulesController extends ControllerBase {
           '#type' => 'table',
           '#header' => array_merge([$this->t('Stop')], $this->tripNames),
           '#rows' => $rows,
-        ]
+        ],
       ];
     }
 
@@ -108,7 +120,7 @@ class SchedulesController extends ControllerBase {
   /**
    * Build multidimensional schedule matrix to use to display schedule data.
    */
-  private function generateScheduleData($trips, $stops, $schedules) {
+  private function generateScheduleData($trips, $stops) {
     $trips_array = [];
 
     // Build the list of trip names and trip ids.
@@ -120,16 +132,6 @@ class SchedulesController extends ControllerBase {
     // Loop through the available stops and build out matrix structure.
     foreach ($stops as $stop) {
       $this->scheduleMatrix[$stop['attributes']['name']] = $trips_array;
-    }
-
-    // Go through the schedule and add departure times to the matrix.
-    foreach ($schedules as $schedule) {
-      $date = new \DateTime($schedule['attributes']['departure_time']);
-      $time = $date->format('h:i A');
-      $stop = $schedule['relationships']['stop']['data']['id'];
-      $trip = $schedule['relationships']['trip']['data']['id'];
-
-      $this->scheduleMatrix[$stop][$trip] = $time;
     }
   }
 
@@ -152,6 +154,57 @@ class SchedulesController extends ControllerBase {
       '#type' => 'link',
       '#url' => $link_url,
     ];
+  }
+
+  /**
+   * Loops through an schedule array and updates times in the schedule matrix.
+   */
+  private function updateScheduleMatrix($schedule_items) {
+    foreach ($schedule_items as $schedule) {
+      // If this is a first or last stop the departure/arrival time could be null.
+      // We make sure we grab a valid time.
+      if ($schedule['attributes']['departure_time']) {
+        $date = new \DateTime($schedule['attributes']['departure_time']);
+      }
+      else {
+        $date = new \DateTime($schedule['attributes']['arrival_time']);
+      }
+
+      $time = $date->format('h:i A');
+      $stop = $schedule['relationships']['stop']['data']['id'];
+      $trip = $schedule['relationships']['trip']['data']['id'];
+
+      // If this stop and trip are not available, this means the stop has a
+      // parent station that needs to be looked up.
+      if (!isset($this->scheduleMatrix[$stop][$trip])) {
+        // If we haven't made an API call to get all the avaialble train stops,
+        // we do that now.
+        if (empty($this->allStops)) {
+          $this->getAllStops();
+        }
+
+        // If this stop has a parent station, use that instead.
+        if (isset($this->allStops[$stop]['attributes']['name'])) {
+          $stop = $this->allStops[$stop]['attributes']['name'];
+        }
+      }
+
+      // Set the time on the schedule matrix.
+      if (isset($this->scheduleMatrix[$stop][$trip])) {
+        $this->scheduleMatrix[$stop][$trip] = $time;
+      }
+    }
+  }
+
+  /**
+   * Gets all the available stops as a keyed array.
+   */
+  private function getAllStops() {
+    $stops = $this->mbtaClient->request('/stops', ['route_type' => '0,1,2']);
+
+    foreach ($stops as $stop) {
+      $this->allStops[$stop['id']] = $stop;
+    }
   }
 
 }
