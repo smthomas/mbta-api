@@ -1,0 +1,7 @@
+mbta_api.mbta_admin_form:
+  title: 'MBTA API Config'
+  route_name: mbta_api.mbta_admin_form
+  description: 'Administer MBTA API Settings'
+  parent: system.admin_config_system
+  weight: 99
+

@@ -1,0 +1,5 @@
+name: 'MBTA API'
+type: module
+description: 'Retrieves and displays data from the MBTA api.'
+core: 8.x
+package: 'Custom'

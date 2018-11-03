@@ -1,0 +1,27 @@
+
+mbta_api.mbta_admin_form:
+  path: '/admin/config/mbta_api/mbtaadmin'
+  defaults:
+    _form: '\Drupal\mbta_api\Form\MBTAAdminForm'
+    _title: 'MBTAAdminForm'
+  requirements:
+    _permission: 'access administration pages'
+  options:
+    _admin_route: TRUE
+
+
+mbta_api.route_controller_hello:
+  path: '/routes'
+  defaults:
+    _controller: '\Drupal\mbta_api\Controller\RouteController::hello'
+    _title: 'content'
+  requirements:
+    _permission: 'access content'
+
+mbta_api.schedules_controller_content:
+  path: 'route/{route}'
+  defaults:
+    _controller: '\Drupal\mbta_api\Controller\SchedulesController::content'
+    _title: 'MBTA Route Schedules'
+  requirements:
+    _permission: 'access content'
