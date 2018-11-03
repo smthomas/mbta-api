@@ -3,7 +3,7 @@ mbta_api.mbta_admin_form:
   path: '/admin/config/mbta_api/mbtaadmin'
   defaults:
     _form: '\Drupal\mbta_api\Form\MBTAAdminForm'
-    _title: 'MBTAAdminForm'
+    _title: 'MBTA API Configuration'
   requirements:
     _permission: 'access administration pages'
   options:
@@ -14,7 +14,7 @@ mbta_api.route_controller_content:
   path: '/routes'
   defaults:
     _controller: '\Drupal\mbta_api\Controller\RouteController::content'
-    _title: 'content'
+    _title: 'MBTA Routes'
   requirements:
     _permission: 'access content'
 

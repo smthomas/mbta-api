@@ -35,7 +35,7 @@ class MBTAAdminForm extends ConfigFormBase {
       '#type' => 'textfield',
       '#title' => $this->t('MBTA API Key'),
       '#description' => $this->t('The MBTA API Key to use in the API Requests'),
-      '#maxlength' => 128,
+      '#maxlength' => 64,
       '#size' => 64,
       '#default_value' => $config->get('mbta_api_key'),
     ];
