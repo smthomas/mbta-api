@@ -1,11 +1,11 @@
 uuid: bcab642c-d40f-40ff-a6cd-f8c94e9c1073
-name: mbta-api
+name: 'MBTA Viewer'
 mail: shane@codekarate.com
 slogan: ''
 page:
   403: ''
   404: ''
-  front: /node
+  front: /routes
 admin_compact_mode: false
 weight_select_max: 100
 langcode: en
