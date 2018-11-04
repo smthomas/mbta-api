@@ -5,7 +5,6 @@ namespace Drupal\mbta_api\Controller;
 use Drupal\mbta_api\MBTAClient;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Link;
-use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -22,6 +21,9 @@ class RouteController extends ControllerBase {
 
   /**
    * Constructs a new RouteController object.
+   *
+   * @param Drupal\mbta_api\MBTAClient $mbtaClient
+   *   The service for accessing the MBTA API.
    */
   public function __construct(MBTAClient $mbtaClient) {
     $this->mbtaClient = $mbtaClient;
@@ -66,6 +68,7 @@ class RouteController extends ControllerBase {
         $options = [
           'attributes' => ['style' => 'color: #' . $attr['text_color']],
         ];
+
         $route_rows[$attr['description']][] = [
           'style' => 'background-color: #' . $attr['color'],
           'data' => [
