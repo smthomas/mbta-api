@@ -5,6 +5,7 @@ namespace Drupal\mbta_api;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
 use Drupal\Component\Serialization\Json;
+use Drupal\Core\Cache\CacheBackendInterface;
 
 /**
  * Class MBTAClient.
@@ -19,6 +20,13 @@ class MBTAClient {
   protected $httpClient;
 
   /**
+   * Caching service to cache API responses.
+   *
+   * @var Drupal\Core\Cache\CacheBackendInterface
+   */
+  private $cache;
+
+  /**
    * String containing the MBTA API Key.
    *
    * @var string
@@ -30,28 +38,46 @@ class MBTAClient {
    *
    * @var string
    */
-  protected $baseURI = 'https://api-v3.mbta.com';
+  protected $baseURI = 'https://api-v3.mbta.com/';
 
   /**
    * Constructs a new MBTAClient object.
    */
-  public function __construct(ClientInterface $http_client, $config) {
+  public function __construct(ClientInterface $http_client, $config, CacheBackendInterface $cache) {
     $this->httpClient = $http_client;
     $this->apiKey = $config->get('mbta_api.mbtaadmin')->get('mbta_api_key');
+    $this->cache = $cache;
   }
 
   /**
    * Make an API request to the MBTA api.
    */
-  public function request($endpoint, $params = [], $sort = FALSE) {
+  public function request($endpoint, $params = [], $sort = FALSE, $cacheable = TRUE) {
     try {
-      $request_url = $this->baseURI . $endpoint;
+      $data = FALSE;
+      if ($cacheable) {
+        $cache_key = $endpoint . '_' . implode('_', $params);
+        $cache_results = $this->cache->get($cache_key);
+        $data = isset($cache_results->data) ? $cache_results->data : FALSE;
+      }
 
-      $response = $this->httpClient->get($request_url, [
-        'headers' => $this->generateHeaders(),
-        'query' => $this->generateQuery($params, $sort),
-      ]);
-      return $this->getData($response->getBody());
+      if (!isset($data) || empty($data)) {
+        $request_url = $this->baseURI . $endpoint;
+
+        $response = $this->httpClient->get($request_url, [
+          'headers' => $this->generateHeaders(),
+          'query' => $this->generateQuery($params, $sort),
+        ]);
+
+        $data = $this->getData($response->getBody());
+
+        if ($cacheable) {
+          // Store this response in the cache and set a 10 minute expiration.
+          $this->cache->set($cache_key, $data, time() + 600, ['mbta_api']);
+        }
+      }
+
+      return $data;
     }
     catch (RequestException $e) {
       watchdog_exception('mbta_api', $e, $e->getMessage());

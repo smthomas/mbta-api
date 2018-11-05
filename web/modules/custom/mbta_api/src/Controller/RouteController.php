@@ -53,7 +53,7 @@ class RouteController extends ControllerBase {
     $params = [
       'type' => '0,1,2',
     ];
-    $routes = $this->mbtaClient->request('/routes', $params);
+    $routes = $this->mbtaClient->request('routes', $params);
 
     if ($routes) {
       $route_rows = [];
@@ -90,12 +90,20 @@ class RouteController extends ControllerBase {
         ];
       }
 
+      // Add caching for max-age of 10 minutes.
+      $render_array['#cache'] = [
+        'max-age' => 600,
+      ];
+
       return $render_array;
     }
 
     return [
       '#type' => 'markup',
       '#markup' => $this->t('No active Routes to display'),
+      '#cache' => [
+        'max-age' => 600,
+      ],
     ];
   }
 
