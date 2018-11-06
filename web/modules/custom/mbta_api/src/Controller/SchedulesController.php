@@ -15,7 +15,7 @@ class SchedulesController extends ControllerBase {
   /**
    * MBTA Client for accessing the MBTA API.
    *
-   * @var Drupal\mbta_api\MBTAClientMBTAClient
+   * @var Drupal\mbta_api\MBTAClient
    */
   private $mbtaClient;
 
@@ -88,16 +88,17 @@ class SchedulesController extends ControllerBase {
     ];
 
     // Get all trips for this route and direction .
-    $trips = $this->mbtaClient->request('/trips', $params, 'id');
+    $trips = $this->mbtaClient->request('trips', $params, 'id');
 
     // Get all stops for this route and direction.
-    $stops = $this->mbtaClient->request('/stops', $params);
+    $stops = $this->mbtaClient->request('stops', $params);
 
     // Get all schedules to fill in the time on the schedule matrix.
-    $schedules = $this->mbtaClient->request('/schedules', $params, 'departure_time');
+    $schedules = $this->mbtaClient->request('schedules', $params, 'departure_time');
 
     // Get all the predictions to update any real-time changes to the schedule.
-    $predictions = $this->mbtaClient->request('/predictions', $params);
+    // We don't need to sort this request and we don't want it to be cacheable.
+    $predictions = $this->mbtaClient->request('predictions', $params, FALSE, FALSE);
 
     if ($stops && $trips && $schedules) {
       // Generate the schedule matrix data structure.
@@ -123,12 +124,18 @@ class SchedulesController extends ControllerBase {
           '#header' => $header,
           '#rows' => $rows,
         ],
+        '#cache' => [
+          'max-age' => 60,
+        ],
       ];
     }
 
     return [
       '#type' => 'markup',
       '#markup' => $this->t('No active Schedule to display'),
+      '#cache' => [
+        'max-age' => 60,
+      ],
     ];
   }
 
@@ -251,7 +258,7 @@ class SchedulesController extends ControllerBase {
    * Call the MBTA API to get  all the available stops as a keyed array.
    */
   private function getAllStops() {
-    $stops = $this->mbtaClient->request('/stops', ['route_type' => '0,1,2']);
+    $stops = $this->mbtaClient->request('stops', ['route_type' => '0,1,2']);
 
     foreach ($stops as $stop) {
       $this->allStops[$stop['id']] = $stop;
