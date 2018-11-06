@@ -66,36 +66,18 @@ class MBTAClient {
    *   Returns a string of API filters.
    */
   private function generateQuery($params, $sort) {
-    $filters = [];
+    $query = [];
+    // Add filters to the query if filters are provided.
     if (!empty($params)) {
-      $filters = $this->generateFilters($params);
+      $query['filter'] = $params;
     }
 
-    // Add the sort to the query args array if a sort is provided.
+    // Add the sort to the query if a sort is provided.
     if ($sort) {
-      $query_args = array_merge($filters, ['sort=' . $sort]);
-    }
-    else {
-      $query_args = $filters;
+      $query['sort'] = $sort;
     }
 
-    return implode('&', $query_args);
-  }
-
-  /**
-   * Generates filters for the API request.
-   *
-   * @return string
-   *   Returns a string of API filters.
-   */
-  private function generateFilters($params) {
-    $filters = [];
-
-    foreach ($params as $key => $value) {
-      $filters[] = 'filter[' . $key . ']=' . $value;
-    }
-
-    return $filters;
+    return http_build_query($query);
   }
 
   /**
